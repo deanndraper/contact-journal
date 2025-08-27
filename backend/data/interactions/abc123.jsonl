@@ -1,0 +1,5 @@
+{"id":"int_4a2ac161-9eb7-43d8-b0d8-7c4da90f8fad","timestamp":"2025-08-27T18:53:01.036Z","recordType":"interaction","interactionType":"Initiated Conversation","comfortLevel":"Comfortable","notes":"Test interaction from backend"}
+{"id":"int_9654510d-9014-411c-9dad-b91c2ba1a2cb","timestamp":"2025-08-27T18:58:17.625Z","recordType":"interaction","interactionType":"Met New Person","comfortLevel":"Comfortable","notes":"Frontend integration test"}
+{"id":"int_49964c3e-8634-493b-97ee-781201132411","timestamp":"2025-08-27T18:59:30.169Z","recordType":"interaction","interactionType":"Responded Positively","comfortLevel":"Comfortable","notes":"responded to co worker walking by\n"}
+{"id":"int_04deecf1-858e-4d63-9085-711b12d474cb","timestamp":"2025-08-27T18:59:55.218Z","recordType":"interaction","interactionType":"Met New Person","comfortLevel":"Somewhat Uncomfortable","notes":"new customer at work, made very basic small talk"}
+{"id":"int_0ede60ed-5f98-4661-8984-80997e331f29","timestamp":"2025-08-27T19:00:45.450Z","recordType":"interaction","interactionType":"Did a Favor","comfortLevel":"Neutral","notes":"brought my boss a pen"}
