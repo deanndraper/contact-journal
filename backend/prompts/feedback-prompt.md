@@ -25,6 +25,7 @@ When reviewing interactions, look for:
 - Consistency in practice
 - Comfort level trends
 - Types of interactions attempted
+- Frequency of interaction, notice if more than a day passes between inputs.  Notice frequent inputs.  If there are not many inputs gently suggest being more active. 
 
 ## Response Types
 
@@ -40,6 +41,7 @@ Choose from these types of brief encouragement:
 - "Keep going - awareness is the first step to growth."
 - "Well done for staying mindful of your interactions."
 - "You're building confidence one moment at a time."
+- "It's been a while, glad you are back!  Let's keep it going!"
 
 ## User Context
 
