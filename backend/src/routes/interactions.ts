@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { StorageService } from '../services/storage';
+import { AIService } from '../services/ai';
 import { APIResponse, CreateInteractionDTO, InteractionRecord } from '../types';
 
 const router = Router();
 const storage = new StorageService();
+const aiService = new AIService();
 
 // Create a new interaction
 router.post('/:userKey', async (req, res) => {
@@ -43,6 +45,17 @@ router.post('/:userKey', async (req, res) => {
     
     // Save to JSONL file
     await storage.appendInteraction(userKey, interactionRecord);
+    
+    // Generate AI feedback asynchronously (don't wait for it)
+    aiService.generateFeedback(userKey, user.name, interactionRecord)
+      .then(feedback => {
+        if (feedback) {
+          console.log(`AI feedback generated for ${userKey}: ${feedback.feedback}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error generating AI feedback:', error);
+      });
     
     const response: APIResponse = {
       success: true,
