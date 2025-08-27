@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { apiService, InteractionRecord, CreateInteractionDTO } from './api';
+import { apiService, InteractionRecord, AIFeedbackRecord, JournalRecord, CreateInteractionDTO } from './api';
 
 function App() {
   const [comfortLevel, setComfortLevel] = useState<string>('');
@@ -9,7 +9,7 @@ function App() {
   const [showRecentEntries, setShowRecentEntries] = useState<boolean>(false);
   const [userKey, setUserKey] = useState<string>('');
   const [userName, setUserName] = useState<string>('Guest');
-  const [recentEntries, setRecentEntries] = useState<InteractionRecord[]>([]);
+  const [recentEntries, setRecentEntries] = useState<JournalRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -47,9 +47,11 @@ function App() {
       const user = await apiService.getUser(key);
       setUserName(user.name);
       
-      // Fetch recent entries
-      const entries = await apiService.getRecentInteractions(key, 10);
-      setRecentEntries(entries);
+      // Fetch all records (interactions + AI feedback)
+      const allRecords = await apiService.getAllRecords(key);
+      // Get the last 20 records to show recent activity
+      const recentRecords = allRecords.slice(-20).reverse();
+      setRecentEntries(recentRecords);
     } catch (err) {
       console.error('Error fetching user data:', err);
       setError('Failed to load user data');
@@ -114,9 +116,10 @@ function App() {
       setComfortLevel('');
       setNotes('');
       
-      // Refresh recent entries
-      const updatedEntries = await apiService.getRecentInteractions(userKey, 10);
-      setRecentEntries(updatedEntries);
+      // Refresh all records to show new interaction and AI feedback
+      const allRecords = await apiService.getAllRecords(userKey);
+      const recentRecords = allRecords.slice(-20).reverse();
+      setRecentEntries(recentRecords);
       
     } catch (err) {
       console.error('Error submitting interaction:', err);
@@ -156,10 +159,12 @@ function App() {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
     
-    if (diffHours < 1) return 'Just now';
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     if (diffDays === 1) return 'Yesterday';
     return `${diffDays} days ago`;
@@ -305,40 +310,70 @@ function App() {
                   <p className="text-sm text-gray-500 mt-2">Loading entries...</p>
                 </div>
               ) : recentEntries.length > 0 ? (
-                recentEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xl">{getInteractionIcon(entry.interactionType)}</span>
-                        <div>
-                          <p className="font-medium text-gray-700 text-sm">
-                            {entry.interactionType}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {formatTimeAgo(entry.timestamp)}
-                          </p>
-                          {entry.notes && (
-                            <p className="text-xs text-gray-600 mt-1 italic">
-                              "{entry.notes}"
+                recentEntries.map((entry) => {
+                  // Check if this is an AI feedback record
+                  if (entry.recordType === 'ai_feedback') {
+                    const aiEntry = entry as AIFeedbackRecord;
+                    return (
+                      <div
+                        key={aiEntry.id}
+                        className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 shadow-sm border border-purple-200"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <span className="text-xl">💭</span>
+                          <div className="flex-1">
+                            <p className="text-sm text-purple-700 font-medium mb-1">
+                              AI Insight
                             </p>
-                          )}
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {aiEntry.feedback}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              {formatTimeAgo(aiEntry.timestamp)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs text-white ${
-                        entry.comfortLevel === 'Very Comfortable' ? 'bg-green-500' :
-                        entry.comfortLevel === 'Comfortable' ? 'bg-lime-400' :
-                        entry.comfortLevel === 'Neutral' ? 'bg-yellow-400' :
-                        entry.comfortLevel === 'Somewhat Uncomfortable' ? 'bg-orange-400' :
-                        'bg-red-500'
-                      }`}>
-                        {entry.comfortLevel}
-                      </span>
+                    );
+                  }
+                  
+                  // Regular interaction record
+                  const interaction = entry as InteractionRecord;
+                  return (
+                    <div
+                      key={interaction.id}
+                      className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xl">{getInteractionIcon(interaction.interactionType)}</span>
+                          <div>
+                            <p className="font-medium text-gray-700 text-sm">
+                              {interaction.interactionType}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatTimeAgo(interaction.timestamp)}
+                            </p>
+                            {interaction.notes && (
+                              <p className="text-xs text-gray-600 mt-1 italic">
+                                "{interaction.notes}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs text-white ${
+                          interaction.comfortLevel === 'Very Comfortable' ? 'bg-green-500' :
+                          interaction.comfortLevel === 'Comfortable' ? 'bg-lime-400' :
+                          interaction.comfortLevel === 'Neutral' ? 'bg-yellow-400' :
+                          interaction.comfortLevel === 'Somewhat Uncomfortable' ? 'bg-orange-400' :
+                          'bg-red-500'
+                        }`}>
+                          {interaction.comfortLevel}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-center text-gray-500 py-4">
                   No entries yet. Start tracking your interactions!
@@ -348,20 +383,6 @@ function App() {
           )}
         </section>
 
-        {/* AI Insights Section */}
-        <section className="mb-8">
-          <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-700 mb-3">
-              Your Progress
-            </h2>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Every interaction is a step forward, {userName}. You're building confidence one experience at a time.
-            </p>
-            <button className="mt-4 text-sm text-purple-600 font-medium hover:text-purple-700">
-              Get Personalized Insight →
-            </button>
-          </div>
-        </section>
       </div>
     </div>
   );

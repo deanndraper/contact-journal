@@ -25,29 +25,44 @@ A mobile-friendly web application for tracking social interactions, designed for
    - Recent entries section is collapsed by default
    - Click to expand/collapse for privacy protection
 
+4. **AI Integration (COMPLETED)**
+   - OpenRouter API integration with GPT-4o model
+   - Real-time AI feedback generation after each interaction
+   - Context-aware therapeutic responses
+   - Inline display with interactions in chronological order
+   - Configurable prompts via markdown files
+
+5. **Backend API (COMPLETED)**
+   - Express.js server with TypeScript
+   - JSONL file storage system (one file per user)
+   - RESTful API endpoints for users and interactions
+   - Environment variable configuration
+
 ### 🚧 To Be Implemented
 
-1. **Backend API** (Express/TypeScript)
-   - User management with key-to-name mapping
-   - JSONL file storage for interaction data
-   - Data retrieval endpoints
+1. **Enhanced Analytics**
+   - Weekly/monthly progress summaries
+   - Comfort level trend analysis
+   - Interaction pattern insights
 
-2. **Claude API Integration**
-   - Personalized insights based on interaction history
-   - Therapeutic progress tracking
+2. **Export Functionality**
+   - PDF reports for therapy sessions
+   - CSV data export
+   - Customizable date ranges
 
-3. **Data Persistence**
-   - Save interactions to backend
-   - Fetch and display user's actual history
+3. **Additional Features**
+   - User preference settings
+   - Multiple interaction categories
+   - Goal setting and tracking
 
 ## Technical Stack
 
 - **Frontend**: React 18 with TypeScript, Tailwind CSS v3
 - **State Management**: React hooks (useState, useEffect)
 - **Styling**: Tailwind CSS with custom purple/blue therapeutic color scheme
-- **Backend**: Express.js with TypeScript
+- **Backend**: Express.js with TypeScript, OpenRouter API integration
 - **Storage**: JSONL file-based data storage (one file per user)
-- **AI Integration**: Claude API for therapeutic insights
+- **AI Integration**: OpenRouter API with GPT-4o for therapeutic insights
 
 ## Development Commands
 
@@ -60,6 +75,9 @@ cd backend
 # Install dependencies
 npm install
 
+# Set up environment variables (required)
+cp .env.example .env  # Then add your OpenRouter API key
+
 # Run development server (runs on http://localhost:3001)
 npm run dev
 
@@ -68,6 +86,18 @@ npm run build
 
 # Start production server
 npm start
+```
+
+### Environment Variables
+
+Backend requires these environment variables in `/backend/.env`:
+```env
+# OpenRouter API Configuration (required for AI feedback)
+OPENROUTER_API_KEY=your_api_key_here
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+
+# Server Configuration
+PORT=3001
 ```
 
 ### React Frontend
@@ -115,22 +145,29 @@ git log --oneline
 ```
 contact-journal/
 ├── src/                  # Frontend React application
-│   ├── App.tsx           # Main app component with all UI logic
+│   ├── App.tsx           # Main app component with AI feedback display
 │   ├── App.css           # Custom slider styles
+│   ├── api.ts            # Backend API service layer
 │   └── index.css         # Tailwind imports
-├── backend/              # Express.js backend
+├── backend/              # Express.js backend with AI integration
 │   ├── src/
 │   │   ├── server.ts     # Express server setup
-│   │   ├── routes/       # API endpoints
-│   │   ├── services/     # Business logic
+│   │   ├── routes/       # API endpoints (users, interactions)
+│   │   ├── services/     # Business logic (storage, AI)
 │   │   └── types/        # TypeScript type definitions
-│   └── data/
-│       ├── users.json    # User key → name mapping
-│       └── interactions/ # User interaction JSONL files
+│   ├── prompts/
+│   │   └── feedback-prompt.md  # AI prompt configuration
+│   ├── data/
+│   │   ├── users.json    # User key → name mapping
+│   │   └── interactions/ # User interaction JSONL files
+│   ├── .env             # Environment variables (OpenRouter key)
+│   ├── package.json     # Backend dependencies
+│   └── tsconfig.json    # Backend TypeScript config
 ├── public/               # Static assets
+├── package.json          # Frontend dependencies
 ├── tailwind.config.js    # Tailwind configuration
 ├── postcss.config.js     # PostCSS configuration
-└── tsconfig.json         # TypeScript configuration
+└── tsconfig.json         # Frontend TypeScript configuration
 ```
 
 ## URL Structure
