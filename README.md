@@ -1,46 +1,166 @@
-# Getting Started with Create React App
+# Contact Journal
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A therapeutic web application for tracking social interactions, designed to help users build confidence and self-awareness through mindful logging of their daily social experiences.
 
-## Available Scripts
+## 🌟 Features
 
-In the project directory, you can run:
+- **URL-based Authentication**: No login required - users access their journal via personalized URLs
+- **Social Interaction Tracking**: Log 5 different types of interactions with comfort level ratings
+- **AI-Powered Feedback**: Receive encouraging, therapeutic feedback after each entry
+- **Privacy-First Design**: Collapsible recent entries section for discretion
+- **Mobile Responsive**: Optimized for use on phones during therapy sessions
 
-### `npm start`
+## 🚀 Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Prerequisites
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Node.js 18+ and npm
+- OpenRouter API key (for AI feedback)
 
-### `npm test`
+### Installation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Clone the repository:
+```bash
+git clone https://github.com/deanndraper/contact-journal.git
+cd contact-journal
+```
 
-### `npm run build`
+2. Install frontend dependencies:
+```bash
+npm install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. Install backend dependencies:
+```bash
+cd backend
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. Set up environment variables:
+```bash
+# In backend/.env
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+PORT=3001
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Running the Application
 
-### `npm run eject`
+1. Start the backend server:
+```bash
+cd backend
+npm run dev
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+2. In a new terminal, start the frontend:
+```bash
+npm start
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. Access the application at `http://localhost:3000/{userKey}`
+   - Example: `http://localhost:3000/abc123`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## 🏗️ Architecture
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Tech Stack
 
-## Learn More
+- **Frontend**: React 18 with TypeScript, Tailwind CSS
+- **Backend**: Express.js with TypeScript
+- **Storage**: JSONL file-based storage (one file per user)
+- **AI Integration**: OpenRouter API with GPT-4o model
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Project Structure
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+contact-journal/
+├── src/                  # React frontend
+├── backend/
+│   ├── src/
+│   │   ├── routes/       # API endpoints
+│   │   ├── services/     # Business logic & AI
+│   │   └── types/        # TypeScript definitions
+│   ├── prompts/          # AI prompt configurations
+│   └── data/             # JSONL storage files
+└── public/               # Static assets
+```
+
+## 📊 Data Model
+
+### Interaction Record
+```json
+{
+  "id": "int_xxx",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "recordType": "interaction",
+  "interactionType": "Initiated Conversation",
+  "comfortLevel": "Comfortable",
+  "notes": "Optional notes"
+}
+```
+
+### AI Feedback Record
+```json
+{
+  "id": "ai_xxx",
+  "timestamp": "2024-01-15T10:30:01Z",
+  "recordType": "ai_feedback",
+  "relatedTo": ["int_xxx"],
+  "feedback": "Encouraging message",
+  "insightType": "observation"
+}
+```
+
+## 🔧 Configuration
+
+### Users
+
+Edit `/backend/data/users.json` to configure users:
+```json
+{
+  "abc123": {"name": "Sarah", "created": "2024-01-01T00:00:00Z"},
+  "def456": {"name": "Michael", "created": "2024-01-02T00:00:00Z"}
+}
+```
+
+### AI Prompts
+
+Modify `/backend/prompts/feedback-prompt.md` to customize AI responses:
+- Change the model (default: GPT-4o)
+- Adjust temperature and token limits
+- Customize therapeutic guidelines
+
+## 📱 Usage
+
+1. Share personalized URLs with users (e.g., `yoursite.com/abc123`)
+2. Users log interactions throughout their day
+3. AI provides immediate, encouraging feedback
+4. Data persists in JSONL files for long-term tracking
+
+## 🔒 Privacy & Security
+
+- No user authentication system - security through obscure URLs
+- All data stored locally on your server
+- AI API keys stored in environment variables
+- .gitignore configured to exclude sensitive data
+
+## 🚧 Future Enhancements
+
+- [ ] Scheduled deep analysis reports
+- [ ] Export functionality for therapy sessions
+- [ ] Progress visualizations and statistics
+- [ ] Additional interaction types
+- [ ] Multi-language support
+
+## 📝 License
+
+This project is private and intended for therapeutic use.
+
+## 👥 Contributing
+
+This is a private project. For questions or access requests, please contact the repository owner.
+
+## 🙏 Acknowledgments
+
+- Built with assistance from Claude AI
+- Designed for therapeutic intervention support
+- OpenRouter for unified AI model access
