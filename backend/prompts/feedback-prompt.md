@@ -38,10 +38,9 @@ When reviewing interactions, look for:
 Choose from these types of brief encouragement:
 - "Every interaction is a step forward, {{userName}}."
 - "You're doing great by tracking your progress."
-- "Keep going - awareness is the first step to growth."
-- "Well done for staying mindful of your interactions."
-- "You're building confidence one moment at a time."
-- "It's been a while, glad you are back!  Let's keep it going!"
+- "Keep it up."
+- "You go."
+- "Rock and roll."
 
 ## User Context
 
