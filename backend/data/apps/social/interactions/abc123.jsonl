@@ -1,0 +1,2 @@
+{"id":"int_f1cf7694-f599-4703-b9a8-77891f76e579","timestamp":"2025-08-29T15:28:09.077Z","recordType":"interaction","interactionType":"Initiated Conversation","comfortLevel":"Comfortable","notes":"Testing social interaction"}
+{"id":"ai_2376b0f6-795f-4a47-a147-de259083bcac","timestamp":"2025-08-29T15:28:10.461Z","recordType":"ai_feedback","relatedTo":["int_f1cf7694-f599-4703-b9a8-77891f76e579"],"feedback":"You're consistently initiating conversations with ease, Sarah. Keep up the great work!","insightType":"observation"}

@@ -33,9 +33,21 @@ export class AIService {
     }
   }
 
-  private async loadPromptConfig(): Promise<void> {
+  private async loadPromptConfig(promptTemplate: string = 'feedback'): Promise<void> {
     try {
-      const promptPath = path.join(__dirname, '../../prompts/feedback-prompt.md');
+      let promptPath: string;
+      
+      // Map template names to files
+      const promptFiles: { [key: string]: string } = {
+        'social-interaction': 'social-interaction-prompt.md',
+        'addiction-recovery': 'addiction-recovery-prompt.md',
+        'general': 'feedback-prompt.md',
+        'feedback': 'feedback-prompt.md'
+      };
+      
+      const fileName = promptFiles[promptTemplate] || promptFiles['general'];
+      promptPath = path.join(__dirname, '../../prompts', fileName);
+      
       const promptContent = await fs.readFile(promptPath, 'utf-8');
       
       // Extract model configuration from markdown
@@ -74,11 +86,13 @@ export class AIService {
   async generateFeedback(
     userKey: string,
     userName: string,
-    newInteraction: InteractionRecord
+    newInteraction: InteractionRecord,
+    promptTemplate?: string,
+    appId?: string
   ): Promise<AIFeedbackRecord | null> {
     try {
-      // Load prompt configuration
-      await this.loadPromptConfig();
+      // Load prompt configuration with specified template
+      await this.loadPromptConfig(promptTemplate);
       
       if (!this.apiKey || !this.promptConfig) {
         console.log('AI feedback skipped: Missing API key or configuration');
@@ -86,7 +100,7 @@ export class AIService {
       }
 
       // Get recent interactions for context (last 20)
-      const allRecords = await this.storageService.getAllRecords(userKey);
+      const allRecords = await this.storageService.getAllRecords(userKey, appId);
       const recentInteractions = allRecords
         .filter(record => record.recordType === 'interaction')
         .slice(-20) as InteractionRecord[];
@@ -110,7 +124,7 @@ export class AIService {
       };
 
       // Save the AI feedback to the user's JSONL file
-      await this.storageService.appendInteraction(userKey, feedbackRecord);
+      await this.storageService.appendInteraction(userKey, feedbackRecord, appId);
 
       return feedbackRecord;
     } catch (error) {

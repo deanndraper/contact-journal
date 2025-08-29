@@ -1,0 +1,99 @@
+{
+  "appId": "addiction-recovery",
+  "appName": "Recovery Journey Tracker",
+  "description": "Track your recovery progress with courage and self-compassion",
+  "interactions": [
+    {
+      "id": "craving_resisted",
+      "label": "Resisted a Craving",
+      "icon": "💪",
+      "description": "You successfully managed and resisted an urge or craving"
+    },
+    {
+      "id": "support_reached",
+      "label": "Reached Out for Support",
+      "icon": "🤝",
+      "description": "You contacted someone for help or attended a support meeting"
+    },
+    {
+      "id": "trigger_avoided",
+      "label": "Avoided a Trigger",
+      "icon": "🛡️",
+      "description": "You recognized and successfully avoided a triggering situation"
+    },
+    {
+      "id": "healthy_activity",
+      "label": "Did Healthy Activity",
+      "icon": "🌱",
+      "description": "You engaged in a positive, recovery-supporting activity"
+    },
+    {
+      "id": "mindfulness_practiced",
+      "label": "Practiced Mindfulness",
+      "icon": "🧘",
+      "description": "You used meditation, breathing, or other mindfulness techniques"
+    },
+    {
+      "id": "craving_experienced",
+      "label": "Experienced Strong Craving",
+      "icon": "⚡",
+      "description": "You felt intense urges or cravings (tracking without judgment)"
+    }
+  ],
+  "comfortLevels": [
+    {
+      "id": "very_strong",
+      "label": "Feeling Very Strong",
+      "color": "green-600",
+      "emoji": "🌟",
+      "description": "Confident, empowered, and in control of your recovery"
+    },
+    {
+      "id": "strong",
+      "label": "Feeling Strong",
+      "color": "green-500",
+      "emoji": "💚",
+      "description": "Good day with solid recovery focus"
+    },
+    {
+      "id": "managing",
+      "label": "Managing Well",
+      "color": "blue-500",
+      "emoji": "🙂",
+      "description": "Handling challenges but staying on track"
+    },
+    {
+      "id": "struggling",
+      "label": "Struggling Today",
+      "color": "orange-500",
+      "emoji": "😔",
+      "description": "Finding it difficult but still trying"
+    },
+    {
+      "id": "very_difficult",
+      "label": "Very Difficult Day",
+      "color": "red-500",
+      "emoji": "😰",
+      "description": "Having a very challenging day with recovery"
+    }
+  ],
+  "theme": {
+    "primary": "blue-600",
+    "secondary": "green-400",
+    "background": "from-green-50 to-blue-50"
+  },
+  "ui": {
+    "welcomeMessage": "You've got this, {userName}",
+    "interactionPrompt": "What did you accomplish today?",
+    "comfortPrompt": "How are you feeling right now?",
+    "notesPrompt": "Share your thoughts (optional)",
+    "notesPlaceholder": "What's on your mind? How are you processing this...",
+    "submitButton": "Record Progress",
+    "recentEntriesTitle": "Your Recovery Journey"
+  },
+  "ai": {
+    "promptTemplate": "addiction-recovery",
+    "enabled": true
+  },
+  "version": "1.0.0"
+}

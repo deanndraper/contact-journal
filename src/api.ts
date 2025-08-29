@@ -33,8 +33,8 @@ export interface InteractionRecord {
   id: string;
   timestamp: string;
   recordType: 'interaction';
-  interactionType: 'Initiated Conversation' | 'Responded Positively' | 'Met New Person' | 'Did a Favor' | 'Listened Intently';
-  comfortLevel: 'Very Comfortable' | 'Comfortable' | 'Neutral' | 'Somewhat Uncomfortable' | 'Very Uncomfortable';
+  interactionType: string; // Dynamic based on configuration
+  comfortLevel: string; // Dynamic based on configuration
   notes?: string;
 }
 
@@ -50,9 +50,57 @@ export interface AIFeedbackRecord {
 export type JournalRecord = InteractionRecord | AIFeedbackRecord;
 
 export interface CreateInteractionDTO {
-  interactionType: InteractionRecord['interactionType'];
-  comfortLevel: InteractionRecord['comfortLevel'];
+  interactionType: string;
+  comfortLevel: string;
   notes?: string;
+  appId?: string;
+}
+
+// Configuration types for frontend
+export interface InteractionType {
+  id: string;
+  label: string;
+  icon: string;
+  description?: string;
+}
+
+export interface ComfortLevel {
+  id: string;
+  label: string;
+  color: string;
+  emoji?: string;
+  description?: string;
+}
+
+export interface Theme {
+  primary: string;
+  secondary: string;
+  background?: string;
+}
+
+export interface UIConfig {
+  welcomeMessage?: string;
+  interactionPrompt?: string;
+  comfortPrompt?: string;
+  notesPrompt?: string;
+  notesPlaceholder?: string;
+  submitButton?: string;
+  recentEntriesTitle?: string;
+}
+
+export interface AppConfig {
+  appId: string;
+  appName: string;
+  description?: string;
+  interactions: InteractionType[];
+  comfortLevels: ComfortLevel[];
+  theme: Theme;
+  ui?: UIConfig;
+  ai?: {
+    promptTemplate?: string;
+    enabled?: boolean;
+  };
+  version?: string;
 }
 
 export interface APIResponse<T = any> {
@@ -93,8 +141,9 @@ class ApiService {
     return response.data.data!;
   }
 
-  async getAllRecords(userKey: string): Promise<JournalRecord[]> {
-    const response = await this.api.get<APIResponse<JournalRecord[]>>(`/interactions/${userKey}/all`);
+  async getAllRecords(userKey: string, appId?: string): Promise<JournalRecord[]> {
+    const params = appId ? { appId } : {};
+    const response = await this.api.get<APIResponse<JournalRecord[]>>(`/interactions/${userKey}/all`, { params });
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to fetch records');
     }
@@ -108,6 +157,53 @@ class ApiService {
       throw new Error(response.data.error || 'Failed to fetch interactions');
     }
     return response.data.data!;
+  }
+
+  // Configuration endpoints
+  async getAppConfig(appId: string): Promise<AppConfig> {
+    const response = await this.api.get<APIResponse<AppConfig>>(`/config/${appId}`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to fetch app configuration');
+    }
+    return response.data.data!;
+  }
+
+  async listConfigs(): Promise<string[]> {
+    const response = await this.api.get<APIResponse<string[]>>('/config');
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to list configurations');
+    }
+    return response.data.data!;
+  }
+
+  async clearConfigCache(): Promise<void> {
+    const response = await this.api.post<APIResponse>('/config/cache/clear');
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to clear config cache');
+    }
+  }
+
+  // Helper method to determine app ID from URL
+  getAppIdFromUrl(): string {
+    const path = window.location.pathname;
+    const hostname = window.location.hostname;
+    
+    // Extract from subdomain (e.g., addiction.domain.com -> addiction)
+    if (hostname.includes('.')) {
+      const subdomain = hostname.split('.')[0];
+      if (subdomain !== 'www' && subdomain !== 'localhost') {
+        return subdomain;
+      }
+    }
+    
+    // Extract from path (e.g., /addiction -> addiction)
+    const pathSegments = path.split('/').filter(segment => segment.length > 0);
+    if (pathSegments.length > 0) {
+      return pathSegments[0];
+    }
+    
+    // Default to social interaction
+    return 'social';
   }
 
   // Health check

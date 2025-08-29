@@ -2,20 +2,27 @@ import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { StorageService } from '../services/storage';
 import { AIService } from '../services/ai';
+import { ConfigService } from '../services/config';
 import { APIResponse, CreateInteractionDTO, InteractionRecord } from '../types';
 
 const router = Router();
 const storage = new StorageService();
 const aiService = new AIService();
+const configService = new ConfigService();
 
 // Create a new interaction
 router.post('/:userKey', async (req, res) => {
   try {
     const { userKey } = req.params;
-    const { interactionType, comfortLevel, notes }: CreateInteractionDTO = req.body;
+    const { interactionType, comfortLevel, notes, appId }: CreateInteractionDTO & { appId?: string } = req.body;
     
-    // Validate user exists
-    const user = await storage.getUser(userKey);
+    // Validate user exists (check in global users for backward compatibility)
+    let user = await storage.getUser(userKey);
+    
+    // If not found globally and appId provided, try app-specific users
+    if (!user && appId) {
+      user = await storage.getUser(userKey, appId);
+    }
     if (!user) {
       const response: APIResponse = {
         success: false,
@@ -44,18 +51,34 @@ router.post('/:userKey', async (req, res) => {
     };
     
     // Save to JSONL file
-    await storage.appendInteraction(userKey, interactionRecord);
+    await storage.appendInteraction(userKey, interactionRecord, appId);
     
     // Generate AI feedback asynchronously (don't wait for it)
-    aiService.generateFeedback(userKey, user.name, interactionRecord)
-      .then(feedback => {
-        if (feedback) {
-          console.log(`AI feedback generated for ${userKey}: ${feedback.feedback}`);
+    // Try to determine app configuration for AI prompt template
+    const generateAIFeedback = async () => {
+      try {
+        let promptTemplate = 'general'; // default
+        
+        // Try to get app configuration from appId or hostname
+        if (appId) {
+          try {
+            const config = await configService.getConfig(appId);
+            promptTemplate = config.ai?.promptTemplate || 'general';
+          } catch (error) {
+            console.warn(`Could not load config for appId ${appId}, using general prompt`);
+          }
         }
-      })
-      .catch(error => {
+        
+        const feedback = await aiService.generateFeedback(userKey, user.name, interactionRecord, promptTemplate, appId);
+        if (feedback) {
+          console.log(`AI feedback generated for ${userKey} (${promptTemplate}): ${feedback.feedback}`);
+        }
+      } catch (error) {
         console.error('Error generating AI feedback:', error);
-      });
+      }
+    };
+    
+    generateAIFeedback();
     
     const response: APIResponse = {
       success: true,
@@ -76,9 +99,13 @@ router.post('/:userKey', async (req, res) => {
 router.get('/:userKey/all', async (req, res) => {
   try {
     const { userKey } = req.params;
+    const appId = req.query.appId as string;
     
-    // Validate user exists
-    const user = await storage.getUser(userKey);
+    // Validate user exists (check global first, then app-specific)
+    let user = await storage.getUser(userKey);
+    if (!user && appId) {
+      user = await storage.getUser(userKey, appId);
+    }
     if (!user) {
       const response: APIResponse = {
         success: false,
@@ -87,7 +114,7 @@ router.get('/:userKey/all', async (req, res) => {
       return res.status(404).json(response);
     }
     
-    const records = await storage.getAllRecords(userKey);
+    const records = await storage.getAllRecords(userKey, appId);
     
     const response: APIResponse = {
       success: true,
@@ -109,9 +136,13 @@ router.get('/:userKey/recent', async (req, res) => {
   try {
     const { userKey } = req.params;
     const limit = parseInt(req.query.limit as string) || 10;
+    const appId = req.query.appId as string;
     
-    // Validate user exists
-    const user = await storage.getUser(userKey);
+    // Validate user exists (check global first, then app-specific)
+    let user = await storage.getUser(userKey);
+    if (!user && appId) {
+      user = await storage.getUser(userKey, appId);
+    }
     if (!user) {
       const response: APIResponse = {
         success: false,
@@ -120,7 +151,7 @@ router.get('/:userKey/recent', async (req, res) => {
       return res.status(404).json(response);
     }
     
-    const interactions = await storage.getRecentInteractions(userKey, limit);
+    const interactions = await storage.getRecentInteractions(userKey, limit, appId);
     
     const response: APIResponse = {
       success: true,
@@ -141,9 +172,13 @@ router.get('/:userKey/recent', async (req, res) => {
 router.get('/:userKey/since/:date', async (req, res) => {
   try {
     const { userKey, date } = req.params;
+    const appId = req.query.appId as string;
     
-    // Validate user exists
-    const user = await storage.getUser(userKey);
+    // Validate user exists (check global first, then app-specific)
+    let user = await storage.getUser(userKey);
+    if (!user && appId) {
+      user = await storage.getUser(userKey, appId);
+    }
     if (!user) {
       const response: APIResponse = {
         success: false,
@@ -161,7 +196,7 @@ router.get('/:userKey/since/:date', async (req, res) => {
       return res.status(400).json(response);
     }
     
-    const records = await storage.getInteractionsSince(userKey, sinceDate);
+    const records = await storage.getInteractionsSince(userKey, sinceDate, appId);
     
     const response: APIResponse = {
       success: true,

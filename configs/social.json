@@ -1,0 +1,93 @@
+{
+  "appId": "social-interaction",
+  "appName": "Social Interaction Journal",
+  "description": "Track your social experiences with compassion",
+  "interactions": [
+    {
+      "id": "initiated",
+      "label": "Initiated Conversation",
+      "icon": "🗣️",
+      "description": "You started a conversation with someone"
+    },
+    {
+      "id": "responded",
+      "label": "Responded Positively", 
+      "icon": "😊",
+      "description": "You responded warmly to someone's interaction"
+    },
+    {
+      "id": "met",
+      "label": "Met a New Person",
+      "icon": "🤝",
+      "description": "You introduced yourself to someone new"
+    },
+    {
+      "id": "favor",
+      "label": "Did a Favor",
+      "icon": "💝",
+      "description": "You helped someone or did something kind"
+    },
+    {
+      "id": "listened",
+      "label": "Listened Intently",
+      "icon": "👂",
+      "description": "You gave someone your full attention"
+    }
+  ],
+  "comfortLevels": [
+    {
+      "id": "very_comfortable",
+      "label": "Very Comfortable",
+      "color": "green-500",
+      "emoji": "😄",
+      "description": "Felt completely at ease and confident"
+    },
+    {
+      "id": "comfortable",
+      "label": "Comfortable",
+      "color": "green-400",
+      "emoji": "😊",
+      "description": "Felt good and relaxed during the interaction"
+    },
+    {
+      "id": "neutral",
+      "label": "Neutral",
+      "color": "yellow-400",
+      "emoji": "😐",
+      "description": "Neither comfortable nor uncomfortable"
+    },
+    {
+      "id": "slightly_uncomfortable",
+      "label": "Slightly Uncomfortable",
+      "color": "orange-400",
+      "emoji": "😟",
+      "description": "Felt some mild discomfort or nervousness"
+    },
+    {
+      "id": "very_uncomfortable",
+      "label": "Very Uncomfortable",
+      "color": "red-500",
+      "emoji": "😰",
+      "description": "Felt very anxious or distressed"
+    }
+  ],
+  "theme": {
+    "primary": "purple-500",
+    "secondary": "purple-200",
+    "background": "from-blue-50 to-purple-50"
+  },
+  "ui": {
+    "welcomeMessage": "Welcome back, {userName}",
+    "interactionPrompt": "What did you do?",
+    "comfortPrompt": "How comfortable did you feel?",
+    "notesPrompt": "Add notes (optional)",
+    "notesPlaceholder": "Any thoughts about this interaction...",
+    "submitButton": "Save Experience",
+    "recentEntriesTitle": "Your Recent Entries"
+  },
+  "ai": {
+    "promptTemplate": "social-interaction",
+    "enabled": true
+  },
+  "version": "1.0.0"
+}

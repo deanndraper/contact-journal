@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/users';
 import interactionRoutes from './routes/interactions';
+import configRoutes from './routes/config';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/interactions', interactionRoutes);
+app.use('/api/config', configRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -57,6 +59,7 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
   console.log(`💭 Interactions API: http://localhost:${PORT}/api/interactions`);
+  console.log(`⚙️  Configuration API: http://localhost:${PORT}/api/config`);
 });
 
 export default app;

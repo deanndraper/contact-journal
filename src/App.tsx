@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { apiService, InteractionRecord, AIFeedbackRecord, JournalRecord, CreateInteractionDTO } from './api';
+import { 
+  apiService, 
+  InteractionRecord, 
+  AIFeedbackRecord, 
+  JournalRecord, 
+  CreateInteractionDTO, 
+  AppConfig,
+  InteractionType,
+  ComfortLevel 
+} from './api';
 
 function App() {
   const [comfortLevel, setComfortLevel] = useState<string>('');
@@ -13,32 +22,41 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [config, setConfig] = useState<AppConfig | null>(null);
+  const [configLoading, setConfigLoading] = useState<boolean>(true);
 
-  // Mapping functions between frontend and backend
-  const mapInteractionTypeToBackend = (frontendType: string): CreateInteractionDTO['interactionType'] => {
-    const mapping: { [key: string]: CreateInteractionDTO['interactionType'] } = {
-      'initiated': 'Initiated Conversation',
-      'responded': 'Responded Positively',
-      'met': 'Met New Person',
-      'favor': 'Did a Favor',
-      'listened': 'Listened Intently',
-    };
-    return mapping[frontendType] || 'Initiated Conversation';
+  // Mapping functions between frontend IDs and backend labels (dynamic based on config)
+  const mapInteractionTypeToBackend = (frontendId: string): string => {
+    if (!config) return frontendId;
+    const interaction = config.interactions.find(i => i.id === frontendId);
+    return interaction?.label || frontendId;
   };
 
-  const mapComfortLevelToBackend = (frontendLevel: string): CreateInteractionDTO['comfortLevel'] => {
-    const mapping: { [key: string]: CreateInteractionDTO['comfortLevel'] } = {
-      'very_comfortable': 'Very Comfortable',
-      'comfortable': 'Comfortable',
-      'neutral': 'Neutral',
-      'slightly_uncomfortable': 'Somewhat Uncomfortable',
-      'very_uncomfortable': 'Very Uncomfortable',
-    };
-    return mapping[frontendLevel] || 'Neutral';
+  const mapComfortLevelToBackend = (frontendId: string): string => {
+    if (!config) return frontendId;
+    const level = config.comfortLevels.find(l => l.id === frontendId);
+    return level?.label || frontendId;
+  };
+
+  // Load application configuration
+  const loadAppConfig = async () => {
+    try {
+      setConfigLoading(true);
+      setError('');
+      
+      const appId = apiService.getAppIdFromUrl();
+      const appConfig = await apiService.getAppConfig(appId);
+      setConfig(appConfig);
+    } catch (err) {
+      console.error('Error loading app configuration:', err);
+      setError('Failed to load app configuration');
+    } finally {
+      setConfigLoading(false);
+    }
   };
 
   // Fetch user data and recent entries
-  const fetchUserData = async (key: string) => {
+  const fetchUserData = async (key: string, appId?: string) => {
     try {
       setLoading(true);
       setError('');
@@ -48,7 +66,7 @@ function App() {
       setUserName(user.name);
       
       // Fetch all records (interactions + AI feedback)
-      const allRecords = await apiService.getAllRecords(key);
+      const allRecords = await apiService.getAllRecords(key, appId);
       // Get the last 20 records to show recent activity
       const recentRecords = allRecords.slice(-20).reverse();
       setRecentEntries(recentRecords);
@@ -67,33 +85,30 @@ function App() {
     }
   };
 
-  // Extract user key from URL on component mount
+  // Load configuration and extract user key from URL on component mount
   useEffect(() => {
-    const pathParts = window.location.pathname.split('/');
-    const key = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+    const initializeApp = async () => {
+      // First load the configuration
+      await loadAppConfig();
+      
+      // Then extract and load user data
+      const pathParts = window.location.pathname.split('/');
+      const key = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+      
+      if (key && key.length > 0) {
+        setUserKey(key);
+        // Get appId after config is loaded
+        const appId = apiService.getAppIdFromUrl();
+        await fetchUserData(key, appId);
+      }
+    };
     
-    if (key && key.length > 0) {
-      setUserKey(key);
-      fetchUserData(key);
-    }
+    initializeApp();
   }, []);
 
-  const interactionTypes = [
-    { id: 'initiated', label: 'Initiated Conversation', icon: '🗣️' },
-    { id: 'responded', label: 'Responded Positively', icon: '😊' },
-    { id: 'met', label: 'Met a New Person', icon: '🤝' },
-    { id: 'favor', label: 'Did a Favor', icon: '💝' },
-    { id: 'listened', label: 'Listened Intently', icon: '👂' },
-  ];
-
-  // Reordered with comfortable options first
-  const comfortLevels = [
-    { id: 'very_comfortable', label: 'Very Comfortable', color: 'bg-green-500', emoji: '😄' },
-    { id: 'comfortable', label: 'Comfortable', color: 'bg-lime-400', emoji: '😊' },
-    { id: 'neutral', label: 'Neutral', color: 'bg-yellow-400', emoji: '😐' },
-    { id: 'slightly_uncomfortable', label: 'Slightly Uncomfortable', color: 'bg-orange-400', emoji: '😟' },
-    { id: 'very_uncomfortable', label: 'Very Uncomfortable', color: 'bg-red-500', emoji: '😰' },
-  ];
+  // Get configuration-based data or fallbacks
+  const interactionTypes = config?.interactions || [];
+  const comfortLevels = config?.comfortLevels || [];
 
   // Submit interaction to backend
   const submitInteraction = async () => {
@@ -106,7 +121,8 @@ function App() {
       const interactionData: CreateInteractionDTO = {
         interactionType: mapInteractionTypeToBackend(interactionType),
         comfortLevel: mapComfortLevelToBackend(comfortLevel),
-        ...(notes && { notes })
+        ...(notes && { notes }),
+        ...(config && { appId: config.appId })
       };
       
       await apiService.createInteraction(userKey, interactionData);
@@ -117,7 +133,7 @@ function App() {
       setNotes('');
       
       // Refresh all records to show new interaction and AI feedback
-      const allRecords = await apiService.getAllRecords(userKey);
+      const allRecords = await apiService.getAllRecords(userKey, config?.appId);
       const recentRecords = allRecords.slice(-20).reverse();
       setRecentEntries(recentRecords);
       
@@ -129,30 +145,28 @@ function App() {
     }
   };
 
-  const getComfortColor = (comfortId: string) => {
-    const level = comfortLevels.find(l => l.id === comfortId);
-    return level?.color || 'bg-gray-300';
+  const getComfortColor = (comfortLevel: string) => {
+    // If it's a backend label, find by label; if it's frontend ID, find by ID
+    const level = config?.comfortLevels.find(l => l.label === comfortLevel || l.id === comfortLevel);
+    return level ? `bg-${level.color}` : 'bg-gray-300';
   };
 
-  const getComfortLabel = (comfortId: string) => {
-    const level = comfortLevels.find(l => l.id === comfortId);
-    return level?.label || 'Unknown';
+  const getComfortLabel = (comfortLevel: string) => {
+    // If it's already a label, return it; otherwise find by ID
+    const level = config?.comfortLevels.find(l => l.id === comfortLevel);
+    return level?.label || comfortLevel;
   };
 
-  const getInteractionLabel = (typeId: string) => {
-    const type = interactionTypes.find(t => t.id === typeId);
-    return type?.label || 'Unknown';
+  const getInteractionLabel = (interactionType: string) => {
+    // If it's already a label, return it; otherwise find by ID
+    const type = config?.interactions.find(t => t.id === interactionType);
+    return type?.label || interactionType;
   };
   
-  const getInteractionIcon = (backendType: string) => {
-    const mapping: { [key: string]: string } = {
-      'Initiated Conversation': '🗣️',
-      'Responded Positively': '😊',
-      'Met New Person': '🤝',
-      'Did a Favor': '💝',
-      'Listened Intently': '👂',
-    };
-    return mapping[backendType] || '💭';
+  const getInteractionIcon = (interactionType: string) => {
+    // Find by label (backend) or ID (frontend)
+    const interaction = config?.interactions.find(i => i.label === interactionType || i.id === interactionType);
+    return interaction?.icon || '💭';
   };
   
   const formatTimeAgo = (timestamp: string) => {
@@ -170,28 +184,62 @@ function App() {
     return `${diffDays} days ago`;
   };
 
+  // Show loading state while configuration is loading
+  if (configLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+          <p className="text-gray-600">Loading application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if configuration failed to load
+  if (!config && error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-semibold text-red-800 mb-2">Configuration Error</h1>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const themeBackground = config?.theme?.background || 'from-blue-50 to-purple-50';
+  const welcomeMessage = config?.ui?.welcomeMessage?.replace('{userName}', userName) || `Welcome back, ${userName}`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+    <div className={`min-h-screen bg-gradient-to-b ${themeBackground}`}>
       <div className="max-w-md mx-auto px-4 py-6">
         {/* Header with User Name */}
         <header className="mb-8 text-center">
           <div className="mb-4">
-            <p className="text-lg text-purple-600 font-medium">
-              Welcome back, {userName}
+            <p className={`text-lg text-${config?.theme?.primary || 'purple-600'} font-medium`}>
+              {welcomeMessage}
             </p>
           </div>
           <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-            Social Interaction Journal
+            {config?.appName || 'Loading...'}
           </h1>
           <p className="text-sm text-gray-600">
-            Track your social experiences with compassion
+            {config?.description || ''}
           </p>
         </header>
 
         {/* Interaction Type Selection */}
         <section className="mb-8">
           <h2 className="text-lg font-medium text-gray-700 mb-4">
-            What did you do?
+            {config?.ui?.interactionPrompt || 'What did you do?'}
           </h2>
           <div className="space-y-2">
             {interactionTypes.map((type) => (
@@ -200,8 +248,8 @@ function App() {
                 onClick={() => setInteractionType(type.id)}
                 className={`w-full text-left p-4 rounded-lg border-2 transition-all flex items-center space-x-3 ${
                   interactionType === type.id
-                    ? 'border-purple-400 bg-purple-50'
-                    : 'border-gray-200 bg-white hover:border-purple-200'
+                    ? `border-${config?.theme?.primary || 'purple-500'} bg-${config?.theme?.secondary || 'purple-50'}`
+                    : `border-gray-200 bg-white hover:border-${config?.theme?.secondary || 'purple-200'}`
                 }`}
               >
                 <span className="text-2xl">{type.icon}</span>
@@ -214,7 +262,7 @@ function App() {
         {/* Comfort Level Selection */}
         <section className="mb-8">
           <h2 className="text-lg font-medium text-gray-700 mb-4">
-            How comfortable did you feel?
+            {config?.ui?.comfortPrompt || 'How did you feel?'}
           </h2>
           
           <div className="grid grid-cols-2 gap-3">
@@ -224,9 +272,9 @@ function App() {
                 onClick={() => setComfortLevel(level.id)}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   comfortLevel === level.id
-                    ? 'border-purple-400 bg-purple-50 ring-2 ring-purple-300'
-                    : 'border-gray-200 bg-white hover:border-purple-200'
-                } ${index === 2 ? 'col-span-2' : ''}`}
+                    ? `border-${config?.theme?.primary || 'purple-500'} bg-${config?.theme?.secondary || 'purple-50'} ring-2 ring-${config?.theme?.primary || 'purple-300'}`
+                    : `border-gray-200 bg-white hover:border-${config?.theme?.secondary || 'purple-200'}`
+                } ${comfortLevels.length === 5 && index === 2 ? 'col-span-2' : ''}`}
               >
                 <div className="text-2xl mb-2 text-center">{level.emoji}</div>
                 <div className="text-sm font-medium text-gray-700 text-center">
@@ -240,13 +288,13 @@ function App() {
         {/* Notes Section */}
         <section className="mb-8">
           <h2 className="text-lg font-medium text-gray-700 mb-2">
-            Add notes (optional)
+            {config?.ui?.notesPrompt || 'Add notes (optional)'}
           </h2>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Any thoughts about this interaction..."
-            className="w-full p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+            placeholder={config?.ui?.notesPlaceholder || 'Any thoughts...'}
+            className={`w-full p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-${config?.theme?.primary || 'purple-400'} focus:border-transparent`}
             rows={3}
           />
         </section>
@@ -264,10 +312,10 @@ function App() {
         <section className="mb-8">
           <button
             onClick={submitInteraction}
-            className="w-full py-4 bg-purple-500 text-white font-medium rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            className={`w-full py-4 bg-${config?.theme?.primary || 'purple-500'} text-white font-medium rounded-lg hover:bg-${config?.theme?.primary?.replace('500', '600') || 'purple-600'} transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md`}
             disabled={!interactionType || !comfortLevel || submitting}
           >
-            {submitting ? 'Saving...' : 'Save Experience'}
+            {submitting ? 'Saving...' : (config?.ui?.submitButton || 'Save Entry')}
           </button>
           {(!interactionType || !comfortLevel) && (
             <p className="text-sm text-gray-500 text-center mt-2">
@@ -283,7 +331,7 @@ function App() {
             className="w-full flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
           >
             <h2 className="text-lg font-medium text-gray-700">
-              Your Recent Entries
+              {config?.ui?.recentEntriesTitle || 'Your Recent Entries'}
             </h2>
             <svg
               className={`w-5 h-5 text-gray-500 transition-transform ${

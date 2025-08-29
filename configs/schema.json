@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Therapeutic App Configuration Schema",
+  "type": "object",
+  "required": ["appId", "appName", "interactions", "comfortLevels", "theme"],
+  "properties": {
+    "appId": {
+      "type": "string",
+      "description": "Unique identifier for the app configuration",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "appName": {
+      "type": "string",
+      "description": "Display name for the application",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description shown to users",
+      "maxLength": 200
+    },
+    "interactions": {
+      "type": "array",
+      "description": "Available interaction types for this app",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "icon"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "icon": {
+            "type": "string",
+            "description": "Emoji or icon character",
+            "minLength": 1,
+            "maxLength": 4
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "comfortLevels": {
+      "type": "array",
+      "description": "Available comfort/intensity levels",
+      "minItems": 3,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "color"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "color": {
+            "type": "string",
+            "description": "Tailwind CSS color class (e.g., 'green-500')",
+            "pattern": "^(red|orange|yellow|green|blue|indigo|purple|pink|gray)-(100|200|300|400|500|600|700|800|900)$"
+          },
+          "emoji": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "theme": {
+      "type": "object",
+      "description": "Visual theming configuration",
+      "required": ["primary", "secondary"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "description": "Primary theme color (Tailwind class)",
+          "pattern": "^(red|orange|yellow|green|blue|indigo|purple|pink)-(500|600|700)$"
+        },
+        "secondary": {
+          "type": "string",
+          "description": "Secondary theme color (Tailwind class)",
+          "pattern": "^(red|orange|yellow|green|blue|indigo|purple|pink)-(100|200|300|400|500)$"
+        },
+        "background": {
+          "type": "string",
+          "description": "Background gradient colors",
+          "default": "from-blue-50 to-purple-50"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ui": {
+      "type": "object",
+      "description": "UI text and prompts",
+      "properties": {
+        "welcomeMessage": {
+          "type": "string",
+          "maxLength": 100,
+          "default": "Welcome back, {userName}"
+        },
+        "interactionPrompt": {
+          "type": "string",
+          "maxLength": 50,
+          "default": "What did you do?"
+        },
+        "comfortPrompt": {
+          "type": "string",
+          "maxLength": 50,
+          "default": "How comfortable did you feel?"
+        },
+        "notesPrompt": {
+          "type": "string",
+          "maxLength": 50,
+          "default": "Add notes (optional)"
+        },
+        "notesPlaceholder": {
+          "type": "string",
+          "maxLength": 100,
+          "default": "Any thoughts about this interaction..."
+        },
+        "submitButton": {
+          "type": "string",
+          "maxLength": 30,
+          "default": "Save Experience"
+        },
+        "recentEntriesTitle": {
+          "type": "string",
+          "maxLength": 50,
+          "default": "Your Recent Entries"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ai": {
+      "type": "object",
+      "description": "AI configuration",
+      "properties": {
+        "promptTemplate": {
+          "type": "string",
+          "description": "Name of the prompt template to use",
+          "default": "general"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "string",
+      "description": "Configuration version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.0.0"
+    }
+  },
+  "additionalProperties": false
+}
