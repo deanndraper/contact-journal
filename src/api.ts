@@ -1,6 +1,27 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// Determine API base URL based on environment
+const getApiBaseUrl = (): string => {
+  // Check if we're in development mode
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3001/api';
+  }
+  
+  // Production: Use current protocol and api subdomain
+  const protocol = window.location.protocol;
+  const host = window.location.hostname;
+  
+  // If we're on journal.transformativehelp.com, use api.transformativehelp.com
+  if (host.includes('transformativehelp.com')) {
+    return `${protocol}//api.transformativehelp.com/api`;
+  }
+  
+  // Fallback for other domains (replace 'journal.' with 'api.')
+  const apiHost = host.replace(/^[^.]+\./, 'api.');
+  return `${protocol}//${apiHost}/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface User {
   userKey: string;

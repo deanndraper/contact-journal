@@ -1,0 +1,179 @@
+# Contact Journal Production Caddy Configuration
+# Designed for multi-subdomain hosting on transformativehelp.com
+# Automatic HTTPS with Let's Encrypt certificates
+
+# Main domain redirect to www (optional)
+transformativehelp.com {
+    redir https://www.transformativehelp.com{uri}
+}
+
+# Contact Journal Frontend - React SPA
+journal.transformativehelp.com {
+    # Serve built React application
+    root * /var/www/journal/build
+    
+    # Enable file serving with SPA fallback
+    file_server
+    try_files {path} /index.html
+    
+    # Security headers for therapeutic application
+    header {
+        # Prevent clickjacking attacks
+        X-Frame-Options "DENY"
+        
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        
+        # Control referrer information
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Enable XSS protection
+        X-XSS-Protection "1; mode=block"
+        
+        # Strict transport security (HTTPS only)
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+    
+    # Compression for better performance
+    encode gzip
+    
+    # Cache static assets
+    @static {
+        path *.js *.css *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+    
+    # API calls should be handled by the API subdomain
+    handle /api/* {
+        redir https://api.transformativehelp.com{uri}
+    }
+    
+    # Logging for monitoring
+    log {
+        output file /var/log/caddy/journal.log
+        format json
+    }
+}
+
+# Contact Journal Backend API - Express.js
+api.transformativehelp.com {
+    # Reverse proxy to Node.js backend
+    reverse_proxy localhost:3001 {
+        # Health check endpoint
+        health_uri /health
+        health_interval 30s
+        
+        # Timeout settings
+        timeout 30s
+        
+        # Headers to preserve client information
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+    
+    # CORS headers for journal subdomain
+    header {
+        Access-Control-Allow-Origin "https://journal.transformativehelp.com"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+        Access-Control-Allow-Credentials "true"
+    }
+    
+    # Handle preflight requests
+    @options {
+        method OPTIONS
+    }
+    respond @options 204
+    
+    # Security headers for API
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+    }
+    
+    # Rate limiting to prevent abuse
+    rate_limit {
+        zone api_limit {
+            key {remote}
+            events 100
+            window 1m
+        }
+    }
+    
+    # Logging for API monitoring
+    log {
+        output file /var/log/caddy/api.log
+        format json
+    }
+}
+
+# =============================================================================
+# FUTURE APPLICATIONS SECTION
+# =============================================================================
+# 
+# Template for adding new applications:
+#
+# newapp.transformativehelp.com {
+#     # For static sites/SPAs:
+#     root * /var/www/newapp/build
+#     file_server
+#     try_files {path} /index.html
+#     
+#     # For backend APIs:
+#     reverse_proxy localhost:3002
+#     
+#     # For full-stack with API routes:
+#     handle /api/* {
+#         reverse_proxy localhost:3002
+#     }
+#     
+#     # Security and performance headers
+#     encode gzip
+#     log {
+#         output file /var/log/caddy/newapp.log
+#         format json
+#     }
+# }
+
+# Example: Documentation site (static)
+# docs.transformativehelp.com {
+#     root * /var/www/docs
+#     file_server
+#     encode gzip
+# }
+
+# Example: Admin dashboard (SPA with API)
+# admin.transformativehelp.com {
+#     root * /var/www/admin/build
+#     file_server
+#     try_files {path} /index.html
+#     
+#     handle /api/* {
+#         reverse_proxy localhost:3003
+#     }
+#     
+#     # Additional security for admin interface
+#     header {
+#         Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+#     }
+# }
+
+# Global configuration options
+{
+    # Email for Let's Encrypt certificate notifications
+    email your-email@transformativehelp.com
+    
+    # Enable automatic HTTPS
+    auto_https on
+    
+    # Global server name
+    servers {
+        name transformativehelp_server
+    }
+    
+    # Default SNI for unknown hosts
+    default_sni journal.transformativehelp.com
+}
