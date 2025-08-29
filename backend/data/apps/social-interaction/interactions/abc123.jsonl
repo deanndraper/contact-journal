@@ -1,0 +1,2 @@
+{"id":"int_9cf485e4-4661-47ac-9f47-79bdc8f30e6b","timestamp":"2025-08-29T15:56:55.686Z","recordType":"interaction","interactionType":"Initiated Conversation","comfortLevel":"Comfortable","notes":"Had coffee with a colleague "}
+{"id":"ai_9c9d3353-fc54-4588-8549-79a79cefb01a","timestamp":"2025-08-29T15:56:56.905Z","recordType":"ai_feedback","relatedTo":["int_9cf485e4-4661-47ac-9f47-79bdc8f30e6b"],"feedback":"You're consistently initiating conversations, Sarah! Keep building those connections.","insightType":"observation"}

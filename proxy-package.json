@@ -1,0 +1,13 @@
+{
+  "name": "simple-proxy",
+  "version": "1.0.0",
+  "description": "Simple reverse proxy for Contact Journal",
+  "main": "simple-proxy.js",
+  "scripts": {
+    "start": "node simple-proxy.js"
+  },
+  "dependencies": {
+    "http-proxy": "^1.18.1",
+    "mime-types": "^2.1.35"
+  }
+}
