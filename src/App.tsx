@@ -215,16 +215,47 @@ function App() {
     );
   }
 
-  const themeBackground = config?.theme?.background || 'from-blue-50 to-purple-50';
   const welcomeMessage = config?.ui?.welcomeMessage?.replace('{userName}', userName) || `Welcome back, ${userName}`;
+  
+  // Theme mappings to avoid dynamic class generation issues
+  const getThemeClasses = () => {
+    const appId = config?.appId;
+    
+    if (appId === 'addiction-recovery') {
+      return {
+        background: 'bg-gradient-to-b from-green-50 to-blue-50',
+        textColor: 'text-blue-600',
+        buttonSelected: 'border-blue-600 bg-green-100 ring-2 ring-blue-400',
+        buttonUnselected: 'border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50',
+        comfortSelected: 'border-blue-600 bg-green-50 ring-2 ring-blue-400',
+        comfortUnselected: 'border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50',
+        submitButton: 'bg-blue-600 hover:bg-blue-700',
+        focusRing: 'focus:ring-blue-400'
+      };
+    } else {
+      // Default to social/purple theme
+      return {
+        background: 'bg-gradient-to-b from-blue-50 to-purple-50',
+        textColor: 'text-purple-600',
+        buttonSelected: 'border-purple-500 bg-purple-100 ring-2 ring-purple-300',
+        buttonUnselected: 'border-gray-200 bg-white hover:border-purple-200 hover:bg-gray-50',
+        comfortSelected: 'border-purple-500 bg-purple-50 ring-2 ring-purple-300',
+        comfortUnselected: 'border-gray-200 bg-white hover:border-purple-200 hover:bg-gray-50',
+        submitButton: 'bg-purple-500 hover:bg-purple-600',
+        focusRing: 'focus:ring-purple-400'
+      };
+    }
+  };
+  
+  const themeClasses = getThemeClasses();
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${themeBackground}`}>
+    <div className={`min-h-screen ${themeClasses.background}`}>
       <div className="max-w-md mx-auto px-4 py-6">
         {/* Header with User Name */}
         <header className="mb-8 text-center">
           <div className="mb-4">
-            <p className={`text-lg text-${config?.theme?.primary || 'purple-600'} font-medium`}>
+            <p className={`text-lg ${themeClasses.textColor} font-medium`}>
               {welcomeMessage}
             </p>
           </div>
@@ -244,8 +275,8 @@ function App() {
           <div className="space-y-2">
             {interactionTypes.map((type) => {
               const isSelected = interactionType === type.id;
-              const selectedClasses = "border-purple-500 bg-purple-100 ring-2 ring-purple-300";
-              const unselectedClasses = "border-gray-200 bg-white hover:border-purple-200 hover:bg-gray-50";
+              const selectedClasses = themeClasses.buttonSelected;
+              const unselectedClasses = themeClasses.buttonUnselected;
               
               return (
               <button
@@ -276,8 +307,8 @@ function App() {
                 onClick={() => setComfortLevel(level.id)}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   comfortLevel === level.id
-                    ? "border-purple-500 bg-purple-50 ring-2 ring-purple-300"
-                    : "border-gray-200 bg-white hover:border-purple-200 hover:bg-gray-50"
+                    ? themeClasses.comfortSelected
+                    : themeClasses.comfortUnselected
                 } ${comfortLevels.length === 5 && index === 2 ? 'col-span-2' : ''}`}
               >
                 <div className="text-2xl mb-2 text-center">{level.emoji}</div>
@@ -298,7 +329,7 @@ function App() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder={config?.ui?.notesPlaceholder || 'Any thoughts...'}
-            className="w-full p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+            className={`w-full p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 ${themeClasses.focusRing} focus:border-transparent`}
             rows={3}
           />
         </section>
@@ -316,7 +347,7 @@ function App() {
         <section className="mb-8">
           <button
             onClick={submitInteraction}
-            className="w-full py-4 bg-purple-500 text-white font-medium rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            className={`w-full py-4 ${themeClasses.submitButton} text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md`}
             disabled={!interactionType || !comfortLevel || submitting}
           >
             {submitting ? 'Saving...' : (config?.ui?.submitButton || 'Save Entry')}
