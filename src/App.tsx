@@ -73,7 +73,7 @@ function App() {
       // Fetch all records (interactions + AI feedback)
       const allRecords = await apiService.getAllRecords(key, appId);
       // Get the last 20 records to show recent activity
-      const recentRecords = allRecords.slice(-20).reverse();
+      const recentRecords = allRecords.slice(-5).reverse();
       setRecentEntries(recentRecords);
     } catch (err) {
       console.error('Error fetching user data:', err);
@@ -164,7 +164,7 @@ function App() {
       
       // Refresh all records to show new interaction and AI feedback
       const allRecords = await apiService.getAllRecords(userKey, config?.appId);
-      const recentRecords = allRecords.slice(-20).reverse();
+      const recentRecords = allRecords.slice(-5).reverse();
       setRecentEntries(recentRecords);
       
       // Show "Saved" confirmation and auto-expand recent entries
