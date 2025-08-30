@@ -110,8 +110,9 @@ kill_port() {
 check_npm_processes() {
     # Check for React dev server
     local react_pid=$(pgrep -f "react-scripts start" 2>/dev/null || echo "")
-    # Check for backend dev server
-    local backend_pid=$(pgrep -f "npm.*run.*dev" 2>/dev/null || echo "")
+    # Check for backend dev server (look for tsx watch which is what actually runs)
+    local backend_pid=$(pgrep -f "tsx watch src/server.ts" 2>/dev/null || echo "")
+    local npm_backend_pid=$(pgrep -f "npm.*run.*dev" 2>/dev/null || echo "")
     
     if [ ! -z "$react_pid" ]; then
         echo -e "${YELLOW}Found React dev server (PID: $react_pid), killing...${NC}"
@@ -121,6 +122,11 @@ check_npm_processes() {
     if [ ! -z "$backend_pid" ]; then
         echo -e "${YELLOW}Found backend dev server (PID: $backend_pid), killing...${NC}"
         kill -9 $backend_pid 2>/dev/null || true
+    fi
+    
+    if [ ! -z "$npm_backend_pid" ]; then
+        echo -e "${YELLOW}Found npm backend process (PID: $npm_backend_pid), killing...${NC}"
+        kill -9 $npm_backend_pid 2>/dev/null || true
     fi
 }
 
@@ -156,20 +162,30 @@ fi
 
 echo -e "${GREEN}Environment verified successfully${NC}"
 
-# Start backend server
+# Create logs directory
+mkdir -p logs
+
+# Start logging this script's output
+STARTUP_LOG="logs/startup-$(date +%Y%m%d-%H%M%S).log"
+exec > >(tee -a "$STARTUP_LOG") 2>&1
+echo "STARTUP.sh log started at $(date)"
+
+# Start backend server with logging
 echo -e "${BLUE}Starting backend server on port $BACKEND_PORT...${NC}"
 cd backend
-npm run dev &
+npm run dev > ../logs/backend.log 2>&1 &
 BACKEND_PID=$!
+echo "Backend PID: $BACKEND_PID (logging to logs/backend.log)"
 cd ..
 
 # Give backend time to start
 sleep 5
 
-# Start frontend server
+# Start frontend server with logging
 echo -e "${BLUE}Starting frontend server on port $FRONTEND_PORT...${NC}"
-npm start &
+npm start > logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
+echo "Frontend PID: $FRONTEND_PID (logging to logs/frontend.log)"
 
 # Wait for services to be ready
 echo "Waiting for services to start..."
@@ -208,28 +224,36 @@ cleanup() {
     kill $FRONTEND_PID 2>/dev/null || true
     kill_port $BACKEND_PORT
     kill_port $FRONTEND_PORT
+    
+    # Also kill any lingering processes
+    pkill -f "tsx watch src/server.ts" 2>/dev/null || true
+    pkill -f "react-scripts start" 2>/dev/null || true
+    
     echo -e "${GREEN}Servers stopped${NC}"
 }
 
 # Set trap to cleanup on script exit
 trap cleanup EXIT INT TERM
 
-# Keep script running and monitor processes
-while true; do
-    sleep 5
-    
-    # Check if processes are still running
-    if ! kill -0 $BACKEND_PID 2>/dev/null; then
-        echo -e "${RED}Backend process died, restarting...${NC}"
-        cd backend
-        npm run dev &
-        BACKEND_PID=$!
-        cd ..
-    fi
-    
-    if ! kill -0 $FRONTEND_PID 2>/dev/null; then
-        echo -e "${RED}Frontend process died, restarting...${NC}"
-        npm start &
-        FRONTEND_PID=$!
-    fi
+echo ""
+echo -e "${GREEN}Servers are running in background.${NC}"
+echo -e "${YELLOW}Logs available at:${NC}"
+echo -e "  Backend: logs/backend.log"
+echo -e "  Frontend: logs/frontend.log"
+echo ""
+echo -e "${BLUE}Monitor logs with:${NC}"
+echo -e "  tail -f logs/backend.log"
+echo -e "  tail -f logs/frontend.log"
+echo ""
+echo -e "${YELLOW}The script will exit in 30 seconds, but servers will continue running.${NC}"
+echo -e "${YELLOW}Use 'pkill -f \"tsx watch\"' and 'pkill -f \"react-scripts\"' to stop them manually.${NC}"
+echo ""
+
+# Wait for 30 seconds then exit (servers continue running)
+for i in {30..1}; do
+    echo -ne "\r${BLUE}Script will exit in $i seconds... (servers will keep running)${NC}"
+    sleep 1
 done
+
+echo -e "\n${GREEN}STARTUP.sh completed. Servers are running independently.${NC}"
+echo -e "Check logs/backend.log and logs/frontend.log for server output."
