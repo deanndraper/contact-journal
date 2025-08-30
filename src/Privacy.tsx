@@ -154,8 +154,19 @@ const Privacy: React.FC = () => {
                 </ul>
               </div>
               <p>
-                <strong>Emergency Support:</strong> This platform is not monitored in real-time. If you're experiencing a mental health emergency, please contact your therapist directly, call your local emergency services, or reach out to a crisis helpline.
+                <strong>Emergency Support:</strong> This platform is not monitored in real-time. If you're experiencing a mental health emergency, please call <strong>911</strong> for immediate assistance or contact a crisis helpline:
               </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-2">
+                <ul className="text-red-800 space-y-1">
+                  <li><strong>National Suicide Prevention Lifeline:</strong> <a href="tel:988" className="underline">988</a> or <a href="tel:1-800-273-8255" className="underline">1-800-273-8255</a></li>
+                  <li><strong>Crisis Text Line:</strong> Text HOME to <a href="sms:741741" className="underline">741741</a></li>
+                  <li><strong>National Alliance on Mental Illness (NAMI):</strong> <a href="tel:1-800-950-6264" className="underline">1-800-950-NAMI</a></li>
+                  <li><strong>SAMHSA National Helpline:</strong> <a href="tel:1-800-662-4357" className="underline">1-800-662-HELP</a></li>
+                </ul>
+                <p className="text-red-700 text-sm mt-2 font-medium">
+                  For non-emergency support, contact your therapist during regular business hours.
+                </p>
+              </div>
             </div>
           </section>
 
