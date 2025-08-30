@@ -215,11 +215,11 @@ echo -e "Backend API: ${GREEN}http://localhost:$BACKEND_PORT${NC}"
 echo -e "Access as user: ${GREEN}http://localhost:$FRONTEND_PORT/{userKey}${NC}"
 echo -e "Example: ${GREEN}http://localhost:$FRONTEND_PORT/abc123${NC}"
 echo ""
-echo "Press Ctrl+C to stop both servers"
+echo "Press Ctrl+C to stop both servers (before 30-second countdown)"
 
-# Function to cleanup on script exit
-cleanup() {
-    echo -e "\n${YELLOW}Shutting down servers...${NC}"
+# Function to cleanup only when interrupted (Ctrl+C)
+cleanup_on_interrupt() {
+    echo -e "\n${YELLOW}Script interrupted. Shutting down servers...${NC}"
     kill $BACKEND_PID 2>/dev/null || true
     kill $FRONTEND_PID 2>/dev/null || true
     kill_port $BACKEND_PORT
@@ -230,10 +230,11 @@ cleanup() {
     pkill -f "react-scripts start" 2>/dev/null || true
     
     echo -e "${GREEN}Servers stopped${NC}"
+    exit 0
 }
 
-# Set trap to cleanup on script exit
-trap cleanup EXIT INT TERM
+# Only cleanup on interrupt (Ctrl+C), not on normal exit
+trap cleanup_on_interrupt INT TERM
 
 echo ""
 echo -e "${GREEN}Servers are running in background.${NC}"
@@ -245,8 +246,8 @@ echo -e "${BLUE}Monitor logs with:${NC}"
 echo -e "  tail -f logs/backend.log"
 echo -e "  tail -f logs/frontend.log"
 echo ""
-echo -e "${YELLOW}The script will exit in 30 seconds, but servers will continue running.${NC}"
-echo -e "${YELLOW}Use 'pkill -f \"tsx watch\"' and 'pkill -f \"react-scripts\"' to stop them manually.${NC}"
+echo -e "${YELLOW}Script will exit in 30 seconds, leaving servers running independently.${NC}"
+echo -e "${YELLOW}To stop servers later: 'pkill -f \"tsx watch\"' and 'pkill -f \"react-scripts\"'${NC}"
 echo ""
 
 # Wait for 30 seconds then exit (servers continue running)
