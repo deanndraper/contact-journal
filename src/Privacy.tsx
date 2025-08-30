@@ -4,6 +4,12 @@ import { useNavigate } from 'react-router-dom';
 const Privacy: React.FC = () => {
   const navigate = useNavigate();
 
+  const handleBackNavigation = () => {
+    // Always use browser back functionality
+    // This works properly with React Router's history management
+    window.history.back();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -20,7 +26,7 @@ const Privacy: React.FC = () => {
         {/* Back Navigation */}
         <div className="mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBackNavigation}
             className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
