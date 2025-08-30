@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './App.css';
 import { 
@@ -22,9 +22,13 @@ function App() {
   const [recentEntries, setRecentEntries] = useState<JournalRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [saved, setSaved] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [configLoading, setConfigLoading] = useState<boolean>(true);
+  
+  // Ref for timeout cleanup
+  const savedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mapping functions between frontend IDs and backend labels (dynamic based on config)
   const mapInteractionTypeToBackend = (frontendId: string): string => {
@@ -107,6 +111,15 @@ function App() {
     initializeApp();
   }, []);
 
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Get configuration-based data or fallbacks
   const interactionTypes = config?.interactions || [];
   const comfortLevels = config?.comfortLevels || [];
@@ -153,6 +166,15 @@ function App() {
       const allRecords = await apiService.getAllRecords(userKey, config?.appId);
       const recentRecords = allRecords.slice(-20).reverse();
       setRecentEntries(recentRecords);
+      
+      // Show "Saved" confirmation and auto-expand recent entries
+      setSaved(true);
+      setShowRecentEntries(true);
+      
+      // Clear saved state after 1 second
+      savedTimeoutRef.current = setTimeout(() => {
+        setSaved(false);
+      }, 1000);
       
     } catch (err: any) {
       console.error('Error submitting interaction:', err);
@@ -379,10 +401,14 @@ function App() {
         <section className="mb-8">
           <button
             onClick={submitInteraction}
-            className={`w-full py-4 ${themeClasses.submitButton} text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md`}
-            disabled={!interactionType || !comfortLevel || submitting}
+            className={`w-full py-4 ${
+              saved 
+                ? 'bg-green-500 hover:bg-green-500' 
+                : themeClasses.submitButton
+            } text-white font-medium rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md`}
+            disabled={!interactionType || !comfortLevel || submitting || saved}
           >
-            {submitting ? 'Saving...' : (config?.ui?.submitButton || 'Save Entry')}
+            {saved ? 'Saved' : submitting ? 'Saving...' : (config?.ui?.submitButton || 'Save Entry')}
           </button>
           {(!interactionType || !comfortLevel) && (
             <p className="text-sm text-gray-500 text-center mt-2">
