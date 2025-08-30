@@ -112,15 +112,31 @@ function App() {
 
   // Submit interaction to backend
   const submitInteraction = async () => {
-    if (!userKey || !interactionType || !comfortLevel) return;
+    if (!userKey || !interactionType || !comfortLevel) {
+      console.warn('Missing required fields:', { userKey, interactionType, comfortLevel });
+      setError('Please select both an interaction type and comfort level');
+      return;
+    }
     
     try {
       setSubmitting(true);
       setError('');
       
+      const mappedInteractionType = mapInteractionTypeToBackend(interactionType);
+      const mappedComfortLevel = mapComfortLevelToBackend(comfortLevel);
+      
+      console.log('Submitting interaction:', {
+        userKey,
+        originalInteractionType: interactionType,
+        mappedInteractionType,
+        originalComfortLevel: comfortLevel,
+        mappedComfortLevel,
+        appId: config?.appId
+      });
+      
       const interactionData: CreateInteractionDTO = {
-        interactionType: mapInteractionTypeToBackend(interactionType),
-        comfortLevel: mapComfortLevelToBackend(comfortLevel),
+        interactionType: mappedInteractionType,
+        comfortLevel: mappedComfortLevel,
         ...(notes && { notes }),
         ...(config && { appId: config.appId })
       };
@@ -137,9 +153,24 @@ function App() {
       const recentRecords = allRecords.slice(-20).reverse();
       setRecentEntries(recentRecords);
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error submitting interaction:', err);
-      setError('Failed to save interaction. Please try again.');
+      console.error('Submission details:', {
+        userKey,
+        interactionType,
+        comfortLevel,
+        mappedInteractionType: mapInteractionTypeToBackend(interactionType),
+        mappedComfortLevel: mapComfortLevelToBackend(comfortLevel),
+        appId: config?.appId,
+        notes
+      });
+      
+      // Extract detailed error message
+      const errorMessage = err.response?.data?.error || 
+                          err.message || 
+                          'Failed to save interaction. Please try again.';
+      
+      setError(`Error: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }

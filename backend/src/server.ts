@@ -15,7 +15,11 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors({
   origin: ['http://localhost:3000', 'https://journal.transformativehelp.com'],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(express.json());
