@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './App.css';
 import { 
   apiService, 
@@ -495,6 +496,16 @@ function App() {
               )}
             </div>
           )}
+        </section>
+
+        {/* Privacy and Data Usage Link */}
+        <section className="mt-8 pb-6 text-center">
+          <Link 
+            to="/privacy" 
+            className="text-sm text-gray-500 hover:text-purple-600 transition-colors underline"
+          >
+            How We Use Your Information
+          </Link>
         </section>
 
       </div>
