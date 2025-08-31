@@ -140,6 +140,13 @@ git commit -m "message"
 git log --oneline
 ```
 
+### Git Branching Strategy
+
+- **`main` branch**: Active development
+- **`stable` branch**: Production-ready code
+- **Production deployment**: Deploy from `stable` branch only
+- **Release workflow**: Merge `main` into `stable` when ready for production
+
 ## Project Structure
 
 ```

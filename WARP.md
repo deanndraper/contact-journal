@@ -137,6 +137,22 @@ pm2 start ecosystem.config.js   # Start with PM2
 sudo systemctl reload caddy     # Reload reverse proxy
 ```
 
+### Git Branching Strategy
+```bash
+# Development: Work on main branch
+git checkout main
+git add . && git commit -m "feature"
+git push origin main
+
+# Production: Deploy from stable branch
+git checkout stable
+git merge main              # When ready to release
+git push origin stable
+
+# Production server: Pull from stable
+git checkout stable && git pull origin stable
+```
+
 ## Code Organization Patterns
 
 ### Backend Structure (`/backend/src/`)
